@@ -181,14 +181,15 @@ class UserSettingsDAO extends DAO {
 	  * Check if an ORCID iD is already in the DB
 	  * @param $orcid string
 	  */
-	function orcidInDB($orcid) {
-	 $name = "orcid";
-	 $result = $this->retrieve(
-					'SELECT COUNT(*) AS row_count FROM user_settings  WHERE setting_name = ?  AND setting_value = ?',
-					[$name, $orcid]
-			);
-			$row = $result->current();
-			return $row && $row->row_count;
-	}
+	function orcidInDB($orcid, $userId = null) {
+         $name = "orcid";
+         $result = $this->retrieve(
+                        'SELECT COUNT(*) AS row_count FROM user_settings  WHERE setting_name = ?  AND setting_value = ?'  . (isset($userId) ? ' AND user_id != ?' : ''),
+                        [$name, $orcid, $userId]
+                );
+                $row = $result->current();
+                return $row && $row->row_count;
+    }
+
 }
 
