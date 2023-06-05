@@ -182,14 +182,45 @@ class UserSettingsDAO extends DAO {
 	  * @param $orcid string
 	  */
 	function orcidInDB($orcid, $userId = null) {
-         $name = "orcid";
-         $result = $this->retrieve(
-                        'SELECT COUNT(*) AS row_count FROM user_settings  WHERE setting_name = ?  AND setting_value = ?'  . (isset($userId) ? ' AND user_id != ?' : ''),
-                        [$name, $orcid, $userId]
-                );
-                $row = $result->current();
-                return $row && $row->row_count;
+        $name = "orcid";
+        $result = $this->retrieve(
+            'SELECT COUNT(*) AS row_count FROM user_settings  WHERE setting_name = ?  AND setting_value = ?'  . (isset($userId) ? ' AND user_id != ?' : ''),
+                [$name, $orcid, $userId]
+        );
+        $row = $result->current();
+        return $row && $row->row_count;
     }
+
+
+	/**
+	  * Check if a user uses the login method they have initially selected 
+	  * Avoids connecting different ORCID iD via Shib and OpenID
+	  * @param $selectedProvider string
+	  */
+	function usesCorrectSignIn($selectedProvider, $userId = null) {
+		$shibProvider = "openid::shibboleth";
+		$orcidProvider = "openid::orcid";
+		$hasLogin = "";
+
+		if($selectedProvider == "shibboleth"){
+			$result = $this->retrieve(
+			'SELECT setting_value FROM user_settings  WHERE setting_name = ?  AND user_id = ?' ,
+				[$orcidProvider, $userId]
+			);
+
+			$hasLogin = $result->current();
+		}
+
+		if($selectedProvider == "orcid"){
+			$result = $this->retrieve(
+			'SELECT setting_value FROM user_settings  WHERE setting_name = ?  AND user_id = ?' ,
+				[$shibProvider, $userId]
+			);
+
+			$hasLogin = $result->current();
+		}
+		return empty($hasLogin);
+	}
 
 }
 
